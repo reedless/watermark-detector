@@ -42,7 +42,8 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
     dataset_dicts = []
 
     for id in tqdm(range(len(input_image_files))):
-
+        if input_image_files[id][-16:] == ':Zone.Identifier':
+            continue
         input_image_file = osp.join(input_image_path, input_image_files[id])
         watermark_mask_file = osp.join(watermark_mask_path, watermark_mask_files[id])
         word_mask_file = osp.join(word_mask_path, word_mask_files[id])
@@ -139,8 +140,8 @@ class LossEvalHook(HookBase):
                 start_time = time.perf_counter()
                 total_compute_time = 0
             start_compute_time = time.perf_counter()
-            if torch.cuda.is_available():
-                torch.cuda.synchronize()
+            # if torch.cuda.is_available():
+                # torch.cuda.synchronize()
             total_compute_time += time.perf_counter() - start_compute_time
             iters_after_start = idx + 1 - num_warmup * int(idx >= num_warmup)
             seconds_per_img = total_compute_time / iters_after_start
@@ -262,6 +263,7 @@ if __name__ == '__main__':
     cfg.SOLVER.MAX_ITER = 4000
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
     cfg.MODEL.DEVICE = "cuda"
+    # cfg.MODEL.DEVICE = "cpu"
 
     # # visualising augmented samples
     # trainer = MyTrainer(cfg)
@@ -296,12 +298,13 @@ if __name__ == '__main__':
         os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
         trainer = MyTrainer(cfg)
         trainer.resume_or_load(resume=False)
-        trainer.train()
+        # trainer.train()
 
         # print metrics for test dataset
         cfg.DATASETS.TEST = ("watermarks_test",)
         evaluator = COCOEvaluator("watermarks_test", cfg, False, output_dir="./output/")
         val_loader = build_detection_test_loader(cfg, "watermarks_test")
+        
         print(inference_on_dataset(trainer.model, val_loader, evaluator))
 
     elif sys.argv[1] == "test":
@@ -313,25 +316,71 @@ if __name__ == '__main__':
 
         test_image_list = image_files_from_folder(test_folder)
 
-        i = 0
-        for d in tqdm(test_image_list):
-            os.makedirs('output/test_result', exist_ok=True)
-            im = cv2.imread(d)
-            outputs = predictor(im)
-            v = Visualizer(im[:, :, ::-1],
-                           metadata=watermarks_metadata,
-                           scale=1.0,
-                           instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
-                           )
-            v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-            im = np.concatenate([v.get_image()[:, :, ::-1], im], axis=1)
+        # i = 0
+        # for d in tqdm(test_image_list):
+        #     im = cv2.imread(d)
+        #     outputs = predictor(im)
+        #     v = Visualizer(im[:, :, ::-1],
+        #                    metadata=watermarks_metadata,
+        #                    scale=1.0,
+        #                    instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+        #                    )
+        #     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+        #     im = np.concatenate([v.get_image()[:, :, ::-1], im], axis=1)
 
-            cv2.imwrite(os.path.join('output/result', f"{i}.jpg"), im)
-            i += 1
+        #     os.makedirs('output/test_result', exist_ok=True)
+        #     cv2.imwrite(os.path.join('output/result', f"{i}.jpg"), im)
+        #     i += 1
 
-        for i in tqdm(os.listdir('dataset/ica_rejected')):
-            os.makedirs('output/ica_rejected/', exist_ok=True)
-            im = cv2.imread(os.path.join('dataset/score_faces_rej', i))
+        # for i in tqdm(os.listdir('dataset/ica_rejected')):
+        #     if i[-16:] == ':Zone.Identifier':
+        #         continue
+        #     im = cv2.imread(os.path.join('dataset/ica_rejected', i))
+        #     outputs = predictor(im)
+        #     v = Visualizer(im[:, :, ::-1],
+        #                    metadata=watermarks_metadata,
+        #                    scale=1,
+        #                    instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+        #                    )
+        #     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+        #     fig, ax = plt.subplots(1, 2, figsize=(14, 10))
+        #     ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
+        #     ax[1].imshow(im[:, :, ::-1])
+
+        #     # if not os.path.exists('./output/score2'):
+        #     #     os.mkdir('./output/score2')
+
+        #     os.makedirs('output/ica_rejected/', exist_ok=True)
+        #     plt.savefig(f'./output/ica_rejected/{i}')
+        #     plt.close()
+
+        # # score_passport
+        # for i in tqdm(os.listdir('dataset/score_passport')):
+        #     if i[-16:] == ':Zone.Identifier':
+        #         continue
+        #     im = cv2.imread(os.path.join('dataset/score_passport', i))
+        #     outputs = predictor(im)
+        #     v = Visualizer(im[:, :, ::-1],
+        #                    metadata=watermarks_metadata,
+        #                    scale=1,
+        #                    instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+        #                    )
+        #     v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+        #     fig, ax = plt.subplots(1, 2, figsize=(14, 10))
+        #     ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
+        #     ax[1].imshow(im[:, :, ::-1])
+
+        #     # if not os.path.exists('./output/score'):
+        #     #     os.mkdir('./output/score')
+        #     os.makedirs('output/score_passport/', exist_ok=True)
+        #     plt.savefig(f'./output/score_passport/{i}')
+        #     plt.close()
+
+        # score_benchmark
+        for i in tqdm(os.listdir('dataset/benchmark')):
+            if i[-16:] == ':Zone.Identifier':
+                continue
+            im = cv2.imread(os.path.join('dataset/benchmark', i))
             outputs = predictor(im)
             v = Visualizer(im[:, :, ::-1],
                            metadata=watermarks_metadata,
@@ -343,24 +392,9 @@ if __name__ == '__main__':
             ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
             ax[1].imshow(im[:, :, ::-1])
 
-            plt.savefig(f'output/score2/{i}')
-            plt.close()
-
-        # score_passport
-        for i in tqdm(os.listdir('dataset/score_passport')):
-            os.makedirs('output/score_passport/', exist_ok=True)
-            im = cv2.imread(os.path.join('dataset/score_passport', i))
-            outputs = predictor(im)
-            v = Visualizer(im[:, :, ::-1],
-                           metadata=watermarks_metadata,
-                           scale=1,
-                           instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
-                           )
-            v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-            fig, ax = plt.subplots(1, 2, figsize=(14, 10))
-            ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
-            ax[1].imshow(im[:, :, ::-1])
-
-            plt.savefig(f'output/score/{i}')
+            # if not os.path.exists('./output/score'):
+            #     os.mkdir('./output/score')
+            os.makedirs('output/benchmark/', exist_ok=True)
+            plt.savefig(f'./output/benchmark/{i}')
             plt.close()
 

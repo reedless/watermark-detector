@@ -1,11 +1,12 @@
 import random
-from torchvision import datasets, transforms
+# from torchvision import datasets, transforms
+from torchvision import transforms
 from PIL import Image
 import numpy as np
 import cv2
 import os.path as osp
 import os
-import sys
+# import sys
 import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -70,7 +71,7 @@ def load_words(img):
         canvas = imutils.rotate(canvas, -rotate_angle)
         colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
 
-    ret, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
+    _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
     img[np.where(canvas_mask == 255)] = colored_canvas[np.where(canvas_mask == 255)]
 
     img = (torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(torch.float32)
@@ -164,8 +165,15 @@ def main():
         print(f">> Generating images for {label} set")
 
         results_path = f"{results_folder}/{label}"
-        photo_path = osp.join(results_path, "photos")
-        watermark_path = osp.join(results_path, "watermarks")
+
+        # required
+        photo_path = osp.join(results_path, "photos")          # photos are unique between train/val/test
+        watermark_path = osp.join(results_path, "watermarks")  # watermarks are unique between train/val/test
+
+        photo_files = sorted(os.listdir(photo_path))
+        watermark_files = sorted(os.listdir(watermark_path))
+
+        # generated
         watermark_mask_path = osp.join(results_path, 'mask_watermark')
         words_mask_path = osp.join(results_path, 'mask_word')
         img_input_path = osp.join(results_path, 'input')
@@ -174,12 +182,9 @@ def main():
         os.makedirs(img_input_path, exist_ok=True)
         os.makedirs(words_mask_path, exist_ok=True)
 
-        photo_files = sorted(os.listdir(photo_path))
-        watermark_files = sorted(os.listdir(watermark_path))
-
         i = 1
         for photo in tqdm(photo_files):
-            for count in range(generated_per_file):
+            for _ in range(generated_per_file):
 
                 img = Image.open(osp.join(photo_path, photo))
                 img = img.resize((256, 256))
@@ -190,6 +195,8 @@ def main():
 
                 # stitch image to lower false-positives
                 img_comb_free = torch.cat([img_original, img_original], dim=2)
+
+                # TODO: Not sure why we need to switch original image left or right?
                 if random.random() > 0.5:
                     img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
                     watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
