@@ -206,16 +206,16 @@ def main():
                 # stitch image to lower false-positives
                 img_comb_free = torch.cat([img_original, img_original], dim=2)
 
-                # TODO: Not sure why we need to switch original image left or right?
-                if random.random() > 0.5:
-                    img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
-                    watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
-                    word_comb_mask = torch.cat([word_img, img_original], dim=2)
-                else:
-                    # append image right
-                    img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
-                    watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
-                    word_comb_mask = torch.cat([img_original, word_img], dim=2)
+                # # TODO: Not sure why we need to switch original image left or right?
+                # if random.random() > 0.5:
+                #     img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
+                #     watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
+                #     word_comb_mask = torch.cat([word_img, img_original], dim=2)
+                # else:
+                #     # append image right
+                img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
+                watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
+                word_comb_mask = torch.cat([img_original, word_img], dim=2)
 
                 # solve for binary masks
                 watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
