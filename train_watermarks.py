@@ -160,7 +160,6 @@ class LossEvalHook(HookBase):
         mean_loss = np.mean(losses)
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
         if mean_loss < self.best_validation_loss or self.best_validation_loss is None:
-            print('best_model found')
             checkpointer = DetectionCheckpointer(self._model, save_dir=cfg.OUTPUT_DIR)
             checkpointer.save("best_model")
 
@@ -180,7 +179,7 @@ class LossEvalHook(HookBase):
 
     def after_step(self):
         next_iter = self.trainer.iter + 1
-        is_final = next_iter == self.trainer.max_iter
+        is_final = (next_iter == self.trainer.max_iter)
         if is_final or (self._period > 0 and next_iter % self._period == 0):
             self._do_loss_eval()
         self.trainer.storage.put_scalars(timetest=12)
@@ -299,7 +298,7 @@ if __name__ == '__main__':
         os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
         trainer = MyTrainer(cfg)
         trainer.resume_or_load(resume=False)
-        # trainer.train()
+        trainer.train()
 
         # print metrics for test dataset
         cfg.DATASETS.TEST = ("watermarks_test",)
