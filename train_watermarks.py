@@ -125,7 +125,7 @@ class LossEvalHook(HookBase):
         self._model = model
         self._period = eval_period
         self._data_loader = data_loader
-        self.best_validation_loss = None
+        self.best_validation_loss = float("inf")
 
     def _do_loss_eval(self):
         # Copying inference_on_dataset from evaluator.py
@@ -159,7 +159,7 @@ class LossEvalHook(HookBase):
             losses.append(loss_batch)
         mean_loss = np.mean(losses)
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
-        if mean_loss < self.best_validation_loss or self.best_validation_loss is None:
+        if mean_loss < self.best_validation_loss:
             checkpointer = DetectionCheckpointer(self._model, save_dir=cfg.OUTPUT_DIR)
             checkpointer.save("best_model")
 
