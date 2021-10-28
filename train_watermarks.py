@@ -125,7 +125,7 @@ class LossEvalHook(HookBase):
         self._model = model
         self._period = eval_period
         self._data_loader = data_loader
-        self.best_validation_loss = 10000000
+        self.best_validation_loss = None
 
     def _do_loss_eval(self):
         # Copying inference_on_dataset from evaluator.py
@@ -159,7 +159,8 @@ class LossEvalHook(HookBase):
             losses.append(loss_batch)
         mean_loss = np.mean(losses)
         self.trainer.storage.put_scalar('validation_loss', mean_loss)
-        if mean_loss < self.best_validation_loss:
+        if mean_loss < self.best_validation_loss or self.best_validation_loss is None:
+            print('best_model found')
             checkpointer = DetectionCheckpointer(self._model, save_dir=cfg.OUTPUT_DIR)
             checkpointer.save("best_model")
 
@@ -377,10 +378,10 @@ if __name__ == '__main__':
         #     plt.close()
 
         # score_benchmark
-        for i in tqdm(os.listdir('dataset/benchmark')):
+        for i in tqdm(os.listdir('dataset/benchmarkv2')):
             if i[-15:] == 'Zone.Identifier':
                 continue
-            im = cv2.imread(os.path.join('dataset/benchmark', i))
+            im = cv2.imread(os.path.join('dataset/benchmarkv2', i))
             outputs = predictor(im)
             v = Visualizer(im[:, :, ::-1],
                            metadata=watermarks_metadata,
@@ -394,7 +395,7 @@ if __name__ == '__main__':
 
             # if not os.path.exists('./output/score'):
             #     os.mkdir('./output/score')
-            os.makedirs('output/benchmark/', exist_ok=True)
-            plt.savefig(f'./output/benchmark/{i}')
+            os.makedirs('output/benchmarkv2/', exist_ok=True)
+            plt.savefig(f'./output/benchmarkv2/{i}')
             plt.close()
 
