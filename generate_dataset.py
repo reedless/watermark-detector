@@ -14,7 +14,7 @@ import string
 import imutils
 
 
-def load_words(img):
+def load_words(img, prob=0.5):
     """
     Loads random number of strings on input img.
     Strings loaded will be numbers for 25% prob, for training on detecting numbers better
@@ -24,6 +24,8 @@ def load_words(img):
     ----------
     img : PIL.JpegImagePlugin.JpegImageFile
         Original image to generate watermarked and worded mask
+
+    prob: probability of loading words
 
     Returns
     -------
@@ -35,6 +37,10 @@ def load_words(img):
 
     img = np.array(img).astype(np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    if random.random() < prob:
+        return img, img.copy()
+
     img_original = img.copy()
 
     height, width, _ = img.shape
@@ -81,7 +87,7 @@ def load_words(img):
     return img, img_original
 
 
-def load_watermark(img_original, word_img, watermark_path, watermark_files):
+def load_watermark(img_original, word_img, watermark_path, watermark_files, prob=0.5):
     """
     Loads a random watermark on original image and worded image
 
@@ -95,6 +101,7 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files):
         Path containing watermarks
     watermark_files : list
         Contains watermark filenames
+    prob: probability of loading watermark
 
     Returns
     -------
@@ -108,6 +115,9 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files):
     _, img_height, img_width = word_img.shape
     img_original = img_original.clone()
     word_img = word_img.clone()
+
+    if random.random() < prob:
+        return word_img, img_original
 
     logo_id = random.randint(0, len(watermark_files) - 1)
     logo = Image.open(osp.join(watermark_path, watermark_files[logo_id]))
