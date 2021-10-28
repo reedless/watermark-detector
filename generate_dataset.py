@@ -37,11 +37,12 @@ def load_words(img, prob=0.5):
 
     img = np.array(img).astype(np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    img_original = img.copy()
 
     if random.random() < prob:
-        return img, img.copy()
-
-    img_original = img.copy()
+        img_original = (torch.from_numpy(cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(
+        torch.float32)
+        return img_original, img_original
 
     height, width, _ = img.shape
     colored_canvas, canvas = np.zeros(img.shape, np.uint8), np.zeros((height, width), np.uint8)
@@ -181,7 +182,7 @@ def main():
         watermark_path = osp.join(results_path, "watermarks")  # watermarks are unique between train/val/test
 
         photo_files = sorted(os.listdir(photo_path))
-        watermark_files = sorted(os.listdir(watermark_path))
+        watermark_files = sorted([f for f in os.listdir(watermark_path) if f[-16:]!=':Zone.Identifier'])
 
         # generated
         watermark_mask_path = osp.join(results_path, 'mask_watermark')
@@ -194,6 +195,8 @@ def main():
 
         i = 1
         for photo in tqdm(photo_files):
+            if photo[-16:] == ':Zone.Identifier':
+                continue
             for _ in range(generated_per_file):
 
                 img = Image.open(osp.join(photo_path, photo))
