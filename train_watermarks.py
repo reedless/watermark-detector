@@ -42,7 +42,7 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
     dataset_dicts = []
 
     for id in tqdm(range(len(input_image_files))):
-        if input_image_files[id][-16:] == ':Zone.Identifier':
+        if input_image_files[id][-15:] == 'Zone.Identifier':
             continue
         input_image_file = osp.join(input_image_path, input_image_files[id])
         watermark_mask_file = osp.join(watermark_mask_path, watermark_mask_files[id])
@@ -378,7 +378,7 @@ if __name__ == '__main__':
 
         # score_benchmark
         for i in tqdm(os.listdir('dataset/benchmark')):
-            if i[-16:] == ':Zone.Identifier':
+            if i[-15:] == 'Zone.Identifier':
                 continue
             im = cv2.imread(os.path.join('dataset/benchmark', i))
             outputs = predictor(im)
