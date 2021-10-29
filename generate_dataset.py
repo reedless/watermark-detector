@@ -70,21 +70,34 @@ def load_words(img, prob=0.5):
                     else (255,255,255))
         lineType = random.randint(1, 3)
 
-        # rotate image => don't need, rotate layer 2 instead
+        layer_2_white = np.zeros_like(canvas, np.uint8)
+        layer_2 = np.zeros_like(colored_canvas, np.uint8)
+
+        # TODO rotate image => don't need, rotate layer 2 instead
         rotate_angle = random.randint(-180, 180)
-        canvas = imutils.rotate(canvas, rotate_angle)
-        colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
+        layer_2_white = imutils.rotate(layer_2_white, rotate_angle)
+        layer_2 = imutils.rotate(layer_2, rotate_angle)
+        # canvas = imutils.rotate(canvas, rotate_angle)
+        # colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
 
-        # text added here, add on 
+        # TODO text added here, add on layer 2 instead
+        cv2.putText(layer_2_white, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
+        cv2.putText(layer_2, rand_string, pos, font, fontScale, fontColor, lineType)
+        # cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
+        # cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
 
-        cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
-        cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
+        # TODO rotate layer 2 back to original pos
+        layer_2_white = imutils.rotate(layer_2_white, -rotate_angle)
+        layer_2 = imutils.rotate(layer_2, -rotate_angle)
+        # canvas = imutils.rotate(canvas, -rotate_angle)
+        # colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
 
-        # rotate layer 2 back to original pos
-        canvas = imutils.rotate(canvas, -rotate_angle)
-        colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
-
-        # add layer 2 onto images
+        # TODO add layer 2 onto images
+        alpha = 0.5
+        mask_2d = layer_2_white.astype(bool)
+        mask_3d = layer_2.astype(bool)
+        canvas[mask_2d] = cv2.addWeighted(canvas, alpha, layer_2_white, 1-alpha, 0)[mask_2d]
+        colored_canvas[mask_3d] = cv2.addWeighted(colored_canvas, alpha, layer_2, 1-alpha, 0)[mask_3d]
 
     _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
     img[np.where(canvas_mask == 255)] = colored_canvas[np.where(canvas_mask == 255)]
