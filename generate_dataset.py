@@ -70,37 +70,22 @@ def load_words(img, prob=0.5):
                     else (255,255,255))
         lineType = random.randint(1, 3)
 
-        layer_2_white = np.zeros_like(canvas, np.uint8)
-        layer_2 = np.zeros_like(colored_canvas, np.uint8)
-
-        # TODO rotate image => don't need, rotate layer 2 instead
+        # rotate canvas
         rotate_angle = random.randint(-180, 180)
-        layer_2_white = imutils.rotate(layer_2_white, rotate_angle)
-        layer_2 = imutils.rotate(layer_2, rotate_angle)
-        # canvas = imutils.rotate(canvas, rotate_angle)
-        # colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
+        canvas = imutils.rotate(canvas, rotate_angle)
+        colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
 
-        # TODO text added here, add on layer 2 instead
-        cv2.putText(layer_2_white, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
-        cv2.putText(layer_2, rand_string, pos, font, fontScale, fontColor, lineType)
-        # cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
-        # cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
+        # add text to canvas
+        cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
+        cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
 
-        # TODO rotate layer 2 back to original pos
-        layer_2_white = imutils.rotate(layer_2_white, -rotate_angle)
-        layer_2 = imutils.rotate(layer_2, -rotate_angle)
-        # canvas = imutils.rotate(canvas, -rotate_angle)
-        # colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
+        # rotate canvas back to original pos
+        canvas = imutils.rotate(canvas, -rotate_angle)
+        colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
 
-        # TODO add layer 2 onto images
-        alpha = 0.5
-        mask_2d = layer_2_white.astype(bool)
-        mask_3d = layer_2.astype(bool)
-        canvas[mask_2d] = cv2.addWeighted(canvas, alpha, layer_2_white, 1-alpha, 0)[mask_2d]
-        colored_canvas[mask_3d] = cv2.addWeighted(colored_canvas, alpha, layer_2, 1-alpha, 0)[mask_3d]
-
+    alpha = random.uniform(0.2, 0.4)
     _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
-    img[np.where(canvas_mask == 255)] = colored_canvas[np.where(canvas_mask == 255)]
+    img[np.where(canvas_mask == 255)] = cv2.addWeighted(img, 1-alpha, colored_canvas, alpha, 0)[np.where(canvas_mask == 255)]
 
     img = (torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(torch.float32)
     img_original = (torch.from_numpy(cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(
@@ -156,7 +141,7 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files, prob
     # img = torch.from_numpy(img)
     logo = transform_totensor(logo_resize)
 
-    alpha = 1  # random.uniform(0.7, 1)  # 0.8
+    alpha = random.uniform(0.2, 0.4)  # 0.8
     start_height = random.randint(0, img_height - logo_height)
     start_width = random.randint(0, img_width - logo_width)
 
