@@ -64,19 +64,27 @@ def load_words(img, prob=0.5):
 
         pos = (rand_width, rand_height)
         fontScale = random.random() / 2 + 0.5  # 0.5 ~ 1
-        fontColor = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        # randomly have half rgb and half white text
+        fontColor = ((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) 
+                    if random.random() > 0.5 
+                    else (255,255,255))
         lineType = random.randint(1, 3)
 
+        # rotate image => don't need, rotate layer 2 instead
         rotate_angle = random.randint(-180, 180)
         canvas = imutils.rotate(canvas, rotate_angle)
         colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
 
+        # text added here, add on 
+
         cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
         cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
 
-        # rotate back to original pos
+        # rotate layer 2 back to original pos
         canvas = imutils.rotate(canvas, -rotate_angle)
         colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
+
+        # add layer 2 onto images
 
     _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
     img[np.where(canvas_mask == 255)] = colored_canvas[np.where(canvas_mask == 255)]
