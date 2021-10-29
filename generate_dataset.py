@@ -188,7 +188,7 @@ def main():
         watermark_path = osp.join(results_path, "watermarks")  # watermarks are unique between train/val/test
 
         photo_files = sorted(os.listdir(photo_path))
-        watermark_files = sorted([f for f in os.listdir(watermark_path) if f[-16:]!=':Zone.Identifier'])
+        watermark_files = sorted([f for f in os.listdir(watermark_path) if f[-15:]!='Zone.Identifier'])
 
         # generated
         watermark_mask_path = osp.join(results_path, 'mask_watermark')
@@ -201,7 +201,7 @@ def main():
 
         i = 1
         for photo in tqdm(photo_files):
-            if photo[-16:] == ':Zone.Identifier':
+            if photo[-15:] == 'Zone.Identifier':
                 continue
             for _ in range(generated_per_file):
 
