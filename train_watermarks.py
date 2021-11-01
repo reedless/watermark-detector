@@ -260,7 +260,7 @@ if __name__ == '__main__':
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.SOLVER.IMS_PER_BATCH = 8
     cfg.SOLVER.BASE_LR = 0.00025
-    cfg.SOLVER.MAX_ITER = 2000 # 4000
+    cfg.SOLVER.MAX_ITER = 4000 # 2000
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
     cfg.MODEL.DEVICE = "cuda"
     # cfg.MODEL.DEVICE = "cpu"
