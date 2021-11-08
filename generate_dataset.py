@@ -39,6 +39,7 @@ def load_words(img, prob=0.5):
     img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     img_original = img.copy()
 
+    # some images will not have words loaded
     if random.random() < prob:
         img_original = (torch.from_numpy(cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(
         torch.float32)
@@ -47,28 +48,40 @@ def load_words(img, prob=0.5):
     height, width, _ = img.shape
     colored_canvas, canvas = np.zeros(img.shape, np.uint8), np.zeros((height, width), np.uint8)
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-
     num_words = random.randint(1, 3)
     for _ in range(num_words):
-        rand_width = int(random.random() * width)
-        rand_height = int(random.random() * height)
+        # upper and lower bound for text length
+        len_words = random.randint(5, 20)
 
-        len_words = random.randint(1, 15)
+        # add digits with char
+        string_list = (string.digits + string.ascii_letters
+                        if random.random() < 0.5
+                        else string.ascii_letters)
+        rand_string = ''.join(random.choices(string_list, k=len_words))
 
-        # add digits instead to detect numbers better
-        string_list = string.digits + string.ascii_letters
-        if random.random() > 0.75:
-            string_list = string.digits
-        rand_string = ''.join([string_list[random.randint(1, len(string_list) - 1)] for x in range(len_words)])
-
+        # upper and lower bound for position of word
+        rand_width = int(random.uniform(0.1, 0.9) * width)
+        rand_height = int(random.uniform(0.1, 0.9) * height)
         pos = (rand_width, rand_height)
-        fontScale = random.random() / 2 + 0.5  # 0.5 ~ 1
-        # randomly have half rgb and half white text
+
+        # random font
+        fonts = [cv2.FONT_HERSHEY_SIMPLEX, cv2.FONT_HERSHEY_DUPLEX, cv2.FONT_HERSHEY_COMPLEX, 
+                 cv2.FONT_HERSHEY_TRIPLEX, cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, cv2.FONT_HERSHEY_SCRIPT_COMPLEX]
+        font = random.choice(fonts)
+
+        # random font scale
+        fontScale = random.uniform(0.5, 1)
+
+        # randomly have 1/4 rgb and 3/4 white text
         fontColor = ((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) 
-                    if random.random() > 0.5 
+                    if random.random() < 0.25
                     else (255,255,255))
-        lineType = random.randint(1, 3)
+
+        #random thickness
+        thickness = random.randint(1, 3)
+        
+        # random linetype
+        lineType = random.choice([cv2.LINE_4, cv2.LINE_8, cv2.LINE_AA])
 
         # rotate canvas
         rotate_angle = random.randint(-180, 180)
@@ -76,8 +89,8 @@ def load_words(img, prob=0.5):
         colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
 
         # add text to canvas
-        cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), lineType)
-        cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, lineType)
+        cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), thickness, lineType)
+        cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, thickness, lineType)
 
         # rotate canvas back to original pos
         canvas = imutils.rotate(canvas, -rotate_angle)
@@ -215,16 +228,16 @@ def main():
                 # stitch image to lower false-positives
                 img_comb_free = torch.cat([img_original, img_original], dim=2)
 
-                # # TODO: Not sure why we need to switch original image left or right?
-                # if random.random() > 0.5:
-                #     img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
-                #     watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
-                #     word_comb_mask = torch.cat([word_img, img_original], dim=2)
-                # else:
-                #     # append image right
-                img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
-                watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
-                word_comb_mask = torch.cat([img_original, word_img], dim=2)
+                if random.random() > 0.5:
+                    # append img_original to the left
+                    img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
+                    watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
+                    word_comb_mask = torch.cat([word_img, img_original], dim=2)
+                else:
+                    # append img_original to the right
+                    img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
+                    watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
+                    word_comb_mask = torch.cat([img_original, word_img], dim=2)
 
                 # solve for binary masks
                 watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
