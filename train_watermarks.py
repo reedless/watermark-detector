@@ -308,13 +308,13 @@ if __name__ == '__main__':
         print(inference_on_dataset(trainer.model, val_loader, evaluator))
 
     elif sys.argv[1] == "test":
-        test_folder = f'{data_path}/test/input'
+        # test_folder = f'{data_path}/test/input'
 
         cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "best_model.pth")
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
         predictor = DefaultPredictor(cfg)
 
-        test_image_list = image_files_from_folder(test_folder)
+        # test_image_list = image_files_from_folder(test_folder)
 
         # i = 0
         # for d in tqdm(test_image_list):
