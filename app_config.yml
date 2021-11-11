@@ -1,0 +1,139 @@
+
+setting:
+  force_cpu               : False  # True: force all models to run in CPU mode; False: use individual "use_gpu" flag 
+  verbose                 : True  # Print out debug info
+  display_image           : False # Display debug images, set to False during production
+
+capability:
+  cap_gaze                : True
+  cap_shoulder_align      : True
+  cap_specular_highlight:
+
+# Common Module Settings
+face_det:
+  selector                : lfd
+  cropped_face_width      : 500
+  cropped_face_height     : 700
+  min_face_ratio          : 0.2
+  max_face_ratio          : 0.68
+  min_bbox_ratio          : 0.60
+  max_bbox_ratio          : 1.2
+
+  lfd:
+    weight_path           : models/face_detection/light_face_detector/pretrained/version-RFB-320.pth
+    label_path            : models/face_detection/light_face_detector/voc-model-labels.txt
+    use_gpu               : False #False by default to save GPU memory
+    candidate_size        : 1500
+    input_size            : 160
+    threshold             : 0.6
+  opencv_dnn:
+    weight_path           : models/face_detection/opencv_dnn/res10_300x300_ssd_iter_140000.caffemodel
+    model_file_path       : models/face_detection/opencv_dnn/deploy.prototxt
+    use_gpu               : False  #Set to True if OpenCV is compiled with CUDA enabled
+    threshold             : 0.5
+
+landmark_det:
+  selector                : hrnet #dlib/hrnet
+  hrnet:
+    model_path            :
+    use_gpu               : False
+    landmark              : WFLW
+    features              :
+      points              :
+        - LEFT_EYE
+      custom              :
+        - 96
+        - 97
+        - 51
+  dlib:
+    model_path            : models/face_landmark/trained_models/shape_predictor_68_face_landmarks.dat
+    use_gpu               : False
+    landmark              : multipie
+    features              :
+      points              :
+        - LEFT_EYE
+      custom              :
+        - 27
+        - 48
+
+foreground_seg:
+  selector                : u2net #u2net: 173.6MB (heavyweight), u2netp: 4.7MB (lightweight)
+  u2net:
+    weight_path           : models/face_foreground_segmentation/u2net/u2net/u2net.pth
+    use_gpu               : False
+  u2netp:
+    weight_path           : models/face_foreground_segmentation/u2net/u2netp/u2netp.pth
+    use_gpu               : False
+
+face_parsing:
+  selector                : parsenet
+  part_thres              : 50 # Absolute number of pixels
+  angle_sym               : 10 # Tolerance for maximum angle for symmetry
+  parsenet:
+    weight_path           : models/face_parsing/parsenet/model.pth
+    use_gpu               : False
+
+specular_seg:
+  weight_path             : models/specular_highlight_segmentation/specular_segment_model_v1.pth
+  use_gpu                 : False
+  threshold               : 0.975
+
+
+# Individual check settings:
+image_size_check:
+  im_height               : 514  # Allowable image height
+  im_width                : 400  # Allowable image width
+
+gaze_check:
+  blinking_thresh         : 0.2
+  left_thresh             : 0.42
+  right_thresh            : 0.6
+
+hair_cover_eye_check:
+  glasses_thres           : 0.05 # Percentage relative to detected face size
+  part_thres              : 100 # Absolute number of pixel
+  hairtouch_thres         : 12
+  haircover_thres         : 0.15
+
+background_check:
+  background_thres        : 0.9 # Floating point between 0 (darker) and 1 (lighter)
+
+frame_cover_eye_check:
+  glasses_thres           : 0.03
+  dilation_kernel_size    : 3
+  dilation_iter           : 2
+
+exposure_check:
+  selector                : pixel
+  uneven_thres            : 18 #25
+  pixel:
+    under_exp_thres       : 80
+    over_exp_thres        : 200
+  hist:
+    under_exp_thres       : 0.35
+    over_exp_thres        : 1.0
+
+mouth_open_check:
+  ratio                   : 0.5
+
+specular_highlight_check:
+  ts                      : 0.15
+  tv                      : 0.60
+  mask_gray_thres         : 0.235
+  blob_min_ratio          : 0.0025 # Minimum blob size ratio w.r.t face area
+
+shoulder_alignment_check:
+  selector                : shoulder_seg
+  shoulder_seg:
+    model_path            : models/shoulder_segmentation/shoulder_segment_model_v1.pth
+    use_gpu               : False
+    seg_thres             : 0.5
+    area_ratio_thres      : 0.75
+    iou_thres             : 0.35
+    delta_y_ratio_thres   : 0.08
+  silhouette:
+    model_path            : models/shoulder_alignment/shoulderalignment_RFC.sav
+
+pixelation_check:
+  model_path              : models/pixelation/pixelation_InceptionV3.pth
+  use_gpu                 : True # Enable this only if GPU memory > 4GB

@@ -184,17 +184,8 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
 
 
 if __name__ == '__main__':
-    # data_path = 'data'
-    # for d in ["train", "val", "test"]:
-    #     DatasetCatalog.register("watermarks_" + d,
-    #                             lambda d=d: get_dataset_dicts(f'{data_path}/{d}/input',
-    #                                                           f'{data_path}/{d}/mask_watermark',
-    #                                                           f'{data_path}/{d}/mask_word')
-    #                             )
-    #     MetadataCatalog.get("watermarks_" + d).set(thing_classes=['watermark', 'text'])
 
     watermarks_metadata = MetadataCatalog.get("watermarks_train")
-    watermarks_metadata_val = MetadataCatalog.get("watermarks_val")
 
     cfg = get_cfg()
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_X_101_32x8d_FPN_3x.yaml"))
@@ -207,30 +198,32 @@ if __name__ == '__main__':
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
     cfg.MODEL.DEVICE = "cuda"
 
-    if sys.argv[1] == "test":
-        cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "best_model.pth")
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-        predictor = DefaultPredictor(cfg)
+    cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "best_model.pth")
+    cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+    predictor = DefaultPredictor(cfg)
 
-        # score_benchmark
-        for i in tqdm(os.listdir('dataset/benchmarkv2')):
-            if i[-15:] == 'Zone.Identifier':
-                continue
-            im = cv2.imread(os.path.join('./dataset/benchmarkv2', i))
-            outputs = predictor(im)
-            v = Visualizer(im[:, :, ::-1],
-                           metadata=watermarks_metadata,
-                           scale=1,
-                           instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
-                           )
-            v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-            fig, ax = plt.subplots(1, 2, figsize=(14, 10))
-            ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
-            ax[1].imshow(im[:, :, ::-1])
+    # score_benchmark
+    for i in tqdm(os.listdir('dataset/benchmarkv2')):
+        if i[-15:] == 'Zone.Identifier':
+            continue
+        im = cv2.imread(os.path.join('./dataset/benchmarkv2', i))
+        outputs = predictor(im)
 
-            if not os.path.exists('./output/benchmarkv2'):
-                os.mkdir('./output/benchmarkv2')
-            os.makedirs('./output/benchmarkv2/', exist_ok=True)
-            plt.savefig(f'./output/benchmarkv2/{i}')
-            plt.close()
+        # Filter out results with background and specular highlight
+
+        v = Visualizer(im[:, :, ::-1],
+                        metadata=watermarks_metadata,
+                        scale=1,
+                        instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+                        )
+        v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+        fig, ax = plt.subplots(1, 2, figsize=(14, 10))
+        ax[0].imshow(cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB))
+        ax[1].imshow(im[:, :, ::-1])
+
+        if not os.path.exists('./output/benchmarkv2'):
+            os.mkdir('./output/benchmarkv2')
+        os.makedirs('./output/benchmarkv2/', exist_ok=True)
+        plt.savefig(f'./output/benchmarkv2/{i}')
+        plt.close()
 
