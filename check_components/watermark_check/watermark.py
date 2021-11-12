@@ -9,13 +9,13 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.utils.visualizer import ColorMode
 import numpy as np
 
-def overlap_percentage(watermark, mask):
+def significant_overlap(watermark, mask, threshold):
     """
     watermark, mask: numpy.ndarray of type bool
     returns: [0, 1] percentage of overlap
     """
     overlap = np.logical_and(watermark, mask)
-    return overlap.sum() / watermark.sum()
+    return (overlap.sum() / watermark.sum()) > threshold
 
 def check_watermark(cfg, input_im, face_foreground_background_res, background_check_result, face_highlight_res):
     status = 0
@@ -46,11 +46,11 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
         # don't add instance if background is not white and watermark instance is mostly in the background
         # need to invert the face_foreground_background_res mask because the background is black
         if (background_check_result["status"] == 0 and 
-            overlap_percentage(instance, ~face_foreground_background_res[:,:,0].reshape(-1)) > 0.9):
+            significant_overlap(instance, ~face_foreground_background_res[:,:,0].reshape(-1), 0.9)):
                 continue
 
         # don't add instance if watermark is mostly a specular reflection
-        if overlap_percentage(instance, face_highlight_res["res_highlight_mask"].reshape(-1) > 0.9):
+        if significant_overlap(instance, face_highlight_res["res_highlight_mask"].reshape(-1), 0.9):
             continue
 
         # add to selected index
