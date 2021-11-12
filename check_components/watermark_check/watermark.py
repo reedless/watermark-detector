@@ -15,6 +15,7 @@ def significant_overlap(watermark, mask, threshold):
     returns: [0, 1] percentage of overlap
     """
     overlap = np.logical_and(watermark, mask)
+    print(overlap.sum() / watermark.sum())
     return (overlap.sum() / watermark.sum()) > threshold
 
 def check_watermark(cfg, input_im, face_foreground_background_res, background_check_result, face_highlight_res):
@@ -44,9 +45,9 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
         instance = output['instances'].pred_masks[i].cpu().numpy().reshape(-1)
 
         # don't add instance if background is not white and watermark instance is mostly in the background
-        # need to invert the face_foreground_background_res mask because the background is black
+        # need to < 5 as face_foreground_background_res is array of [0, 255]
         if (background_check_result["status"] == 0 and 
-            significant_overlap(instance, ~face_foreground_background_res[:,:,0].reshape(-1), 0.9)):
+            significant_overlap(instance, face_foreground_background_res[:,:,0].reshape(-1) < 5, 0.9)):
                 continue
 
         # don't add instance if watermark is mostly a specular reflection
