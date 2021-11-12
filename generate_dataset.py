@@ -70,7 +70,7 @@ def load_words(img, prob=0.5):
         font = random.choice(fonts)
 
         # random font scale
-        fontScale = random.uniform(0.5, 1)
+        fontScale = random.uniform(0.1, 1)
 
         # randomly have 1/4 rgb and 3/4 white text
         fontColor = ((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) 
@@ -83,18 +83,24 @@ def load_words(img, prob=0.5):
         # random linetype
         lineType = random.choice([cv2.LINE_4, cv2.LINE_8, cv2.LINE_AA])
 
-        # rotate canvas
-        rotate_angle = random.randint(-180, 180)
-        canvas = imutils.rotate(canvas, rotate_angle)
-        colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
+        if random.random() < 0.5:
+            # add text to canvas without rotation
+            cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), thickness, lineType)
+            cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, thickness, lineType)
+        else:
+            # add text to canvas with rotation
+            # rotate canvas
+            rotate_angle = random.randint(-180, 180)
+            canvas = imutils.rotate(canvas, rotate_angle)
+            colored_canvas = imutils.rotate(colored_canvas, rotate_angle)
 
-        # add text to canvas
-        cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), thickness, lineType)
-        cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, thickness, lineType)
+            # add text to canvas
+            cv2.putText(canvas, rand_string, pos, font, fontScale, (255, 255, 255), thickness, lineType)
+            cv2.putText(colored_canvas, rand_string, pos, font, fontScale, fontColor, thickness, lineType)
 
-        # rotate canvas back to original pos
-        canvas = imutils.rotate(canvas, -rotate_angle)
-        colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
+            # rotate canvas back to original pos
+            canvas = imutils.rotate(canvas, -rotate_angle)
+            colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
 
     alpha = random.uniform(0.2, 0.4)
     _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
