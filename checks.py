@@ -3,6 +3,9 @@ import logging
 import cv2
 import yaml
 import base64
+from tqdm import tqdm
+import os
+import matplotlib.pyplot as plt
 from check_components.common.utils.CheckStatus import CheckStatus
 from check_components.common.utils.CheckConfig import CheckConfig
 from check_components.common.facedetector.face_detection import FaceDetection
@@ -242,11 +245,11 @@ class Check(object):
                                                   self.face_fgbg_res, 
                                                   self.check_results['background_check'], 
                                                   self.face_highlight_res)
-                                                  
+
         if self._cfg["setting"]["display_image"]:
                 cv2.imshow("Watermark Image", processed_img)
 
-        return status_remarks
+        return status_remarks, processed_img
 
 
     def process(self, payload: str):
@@ -280,7 +283,7 @@ class Check(object):
                 self.check_results['background_check'] = self._check_background()
 
                 logging.info("Performing watermark check ...")
-                self.check_results['watermark_check'] = self._check_watermark()
+                self.check_results['watermark_check'], processed_img = self._check_watermark()
 
         else:
             logger.error("File type error or image not readable.")
@@ -291,12 +294,27 @@ class Check(object):
             cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-        return self.check_results
+        return self.check_results, self.input_im, processed_img
 
 if __name__ == '__main__':
     checkMain = Check('app_config.yml')
-    with open('dataset/benchmarkv2/clean_Img_001301.jpg', "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read())
-    check_results = checkMain.process(encoded_string)
-    for key in check_results.keys():
-        print(key, check_results[key])
+    for i in tqdm(os.listdir('dataset/benchmarkv2')):
+        if i[-15:] == 'Zone.Identifier':
+            continue
+
+        with open(f'dataset/benchmarkv2/{i}', "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+
+        check_results, input_img, processed_img = checkMain.process(encoded_string)
+
+        fig, ax = plt.subplots(1, 2, figsize=(14, 10))
+        ax[0].imshow(processed_img)
+        ax[1].imshow(input_img[:, :, ::-1])
+        if not os.path.exists('./output/benchmarkv2'):
+            os.mkdir('./output/benchmarkv2')
+        os.makedirs('./output/benchmarkv2/', exist_ok=True)
+        plt.savefig(f'./output/benchmarkv2/{i}')
+        plt.close()
+
+        for key in check_results.keys():
+            print(key, check_results[key])
