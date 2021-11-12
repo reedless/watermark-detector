@@ -7,21 +7,27 @@ from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
 from detectron2.utils.visualizer import ColorMode
 
-def check_watermark(cfg, input_im, face_foregroun_background_res, background_check_result, face_highlight_res):
+def check_watermark(cfg, input_im, face_foreground_background_res, background_check_result, face_highlight_res):
     model_cfg = get_cfg()
     model_cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_X_101_32x8d_FPN_3x.yaml"))
     model_cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
     model_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
-    model_cfg.MODEL.WEIGHTS = cfg["watermark"]["weight_path"]
+    model_cfg.MODEL.WEIGHTS = cfg["watermark_check"]["model_path"]
 
     # check if GPU exists
     has_cuda = torch.cuda.is_available()  
     if cfg["setting"]["force_cpu"]:
         model_cfg.MODEL.DEVICE = "cpu"
-    elif has_cuda and cfg["watermark"]["use_gpu"]:
+    elif has_cuda and cfg["watermark_check"]["use_gpu"]:
         model_cfg.MODEL.DEVICE = "cuda"
     else:
         model_cfg.MODEL.DEVICE = "cpu"
+
+    print(f"Size: {face_foreground_background_res[:,:,0].size}")
+    print(f"Size: {len(face_foreground_background_res[:,:,0].reshape(-1))}")
+    
+    print("Highlight Binary Mask")
+    print(len(face_highlight_res["res_highlight_mask"].reshape(-1)))
 
     processed_img = 0
 
