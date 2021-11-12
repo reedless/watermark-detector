@@ -11,3 +11,4 @@ data_20211101.zip
 data_cache.zip
 models/
 output_*/
+**/__pycache__/
