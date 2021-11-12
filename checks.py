@@ -138,7 +138,8 @@ class Check(object):
         det_face_im = self._face_detector.plot_boxes(self.input_im, self.face_boxes_res)
 
         # Make sure there is only single face detected, otherwise skip all checks
-        if len(self.face_boxes_res) == 1:
+        # if len(self.face_boxes_res) == 1:
+        if True:
             remark_msg = "Single face is detected."
 
             self.face_location_validity, self.cropped_face, self.cropped_ratio = self._face_detector.get_cropped_face(
@@ -173,16 +174,16 @@ class Check(object):
                 self.input_im = cropped_face_margin
                 self.face_boxes_res, self.input_im = self._face_detector.detect(self.input_im, True)
 
-        else:
-            if len(self.face_boxes_res) == 0:
-                remark_msg = "No face detected."
-            elif len(self.face_boxes_res) > 1:
-                remark_msg = "More than 1 face detected."
+        # else:
+        #     if len(self.face_boxes_res) == 0:
+        #         remark_msg = "No face detected."
+        #     elif len(self.face_boxes_res) > 1:
+        #         remark_msg = "More than 1 face detected."
 
-            self.check_results['face_presence_check']['status'] = CheckStatus.STATUS_FAIL.value
-            self.check_results['face_presence_check']['remarks'] = remark_msg
-            logger.error(remark_msg)
-            return -1
+        #     self.check_results['face_presence_check']['status'] = CheckStatus.STATUS_FAIL.value
+        #     self.check_results['face_presence_check']['remarks'] = remark_msg
+        #     logger.error(remark_msg)
+        #     return -1
 
         # Make sure face is not too small or too big
         if not (self._cfg["face_det"]["min_face_ratio"] < self.cropped_ratio
@@ -237,8 +238,6 @@ class Check(object):
         """
         Perform compliance check x: watermark check
         """
-        # self.face_highlight_res["res_img_cv"]
-        # return {"res_img_cv": v.get_image()[:, :, ::-1], "res_highlight_mask": bin_mask}
 
         status_remarks, processed_img =  check_watermark(self._cfg, 
                                                   self.input_im, 
@@ -294,7 +293,7 @@ class Check(object):
             cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-        return self.check_results, self.input_im, processed_img
+        return self.check_results, self.input_im, processed_img, self.face_fgbg_res, self.face_highlight_res["res_img_cv"]
 
 if __name__ == '__main__':
     checkMain = Check('app_config.yml')
@@ -305,11 +304,16 @@ if __name__ == '__main__':
         with open(f'dataset/benchmarkv2/{i}', "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
 
-        check_results, input_img, processed_img = checkMain.process(encoded_string)
+        check_results, input_img, processed_img, face_fgbg_res, face_highlight_res = checkMain.process(encoded_string)
 
-        fig, ax = plt.subplots(1, 2, figsize=(14, 10))
-        ax[0].imshow(processed_img)
-        ax[1].imshow(input_img[:, :, ::-1])
+        fig, ax = plt.subplots(2, 2, figsize=(14, 10))
+        ax[0][0].imshow(processed_img)
+
+        ax[0][1].imshow(input_img[:, :, ::-1])
+
+        ax[1][0].imshow(face_fgbg_res)
+        ax[1][1].imshow(face_highlight_res)
+
         if not os.path.exists('./output/benchmarkv2'):
             os.mkdir('./output/benchmarkv2')
         os.makedirs('./output/benchmarkv2/', exist_ok=True)
