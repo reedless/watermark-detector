@@ -3,33 +3,15 @@ import logging
 import cv2
 import yaml
 import base64
-# import datetime
-# import pytz
-# from fastapi import HTTPException
 from check_components.common.utils.CheckStatus import CheckStatus
 from check_components.common.utils.CheckConfig import CheckConfig
 from check_components.common.facedetector.face_detection import FaceDetection
-# from check_components.common.facelandmark.face_landmark import FaceLandmark
 from check_components.common.facesegment.foreground_segment import ForegroundSegmentation
 from check_components.common.facesegment.face_parsing import FaceParsing
 from check_components.common.facesegment.specular_highlight_segment import SpecularHighlightSegmentation
 from check_components.filetype_check.filetype import check_file_type
-# from check_components.imagesize_check.imagesize import check_image_size
-# from check_components.gaze_check.gaze import check_gaze
-# from check_components.haircovereye_check.haircovereye import check_hair_cover_eye
-# from check_components.eyeclose_check.eyeclose import check_eyeclose
-# from check_components.framecovereye_check.framecovereye import check_frame_cover_eye
 from check_components.background_check.background import check_background
 from check_components.watermark_check.watermark import check_watermark
-# from check_components.exposure_check.exposure import check_exposure
-# from check_components.mouthopen_check.mouthopen import check_mouthopen
-# from check_components.specularhighlight_check.specularhighlight import check_specular_highlight
-# from check_components.shoulderalignment_check.shoulderalignment import ShoulderAlignmentClassifier
-# from check_components.pixelation_check.pixelation import PixelationClassifier
-
-# from core.messages import NO_VALID_PAYLOAD
-# from interface.payload import BccaasPayload
-# from interface.response import BccaasResults
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -108,60 +90,12 @@ class Check(object):
             'file_type_check': {
                 "status": CheckStatus.STATUS_UNKNOWN,
                 "remarks": _INVALID_REMARKS},
-            # 'image_size_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'gaze_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'shoulder_alignment_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'mouth_open_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'pixelation_check': {
-            #      "status": CheckStatus.STATUS_UNKNOWN,
-            #      "remarks": _INVALID_REMARKS},
-            # 'eye_close_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
             'background_check': {
                 "status": CheckStatus.STATUS_UNKNOWN,
                 "remarks": _INVALID_REMARKS},
             'watermark_check': {
                 "status": CheckStatus.STATUS_UNKNOWN,
                 "remarks": _INVALID_REMARKS},
-            # 'exposure_check': {  # (renamed from bad lighting for clarity)
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'skin_specular_reflection_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'hair_cover_eye_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'frame_cover_eye_check': {
-            #     "status": CheckStatus.STATUS_UNKNOWN,
-            #     "remarks": _INVALID_REMARKS},
-            # 'headdress_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
-            # 'cloth_cover_face_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
-            # 'ink_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
-            # 'face_front_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
-            # 'blur_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
-            # 'border_check': {
-            #     "status": CheckStatus.STATUS_UNAVAIL,
-            #     "remarks": _UNAVAIL_REMARKS},
         }
 
         # TODO handle case when error reading config file
@@ -198,15 +132,7 @@ class Check(object):
         # self.face_boxes_res = self._face_detector.detect(self.input_im)
         self.face_boxes_res, self.input_im = self._face_detector.detect(self.input_im, self.orientation)
 
-        # if self._cfg["setting"]["display_image"]:
-        #     cv2.imshow("Optimal Image", self.input_im)
-            # cv2.waitKey(0)
-
         det_face_im = self._face_detector.plot_boxes(self.input_im, self.face_boxes_res)
-
-        # if self._cfg["setting"]["display_image"]:
-        #     cv2.imshow("[Common] Face Detection", det_face_im)
-            # cv2.waitKey(0)
 
         # Make sure there is only single face detected, otherwise skip all checks
         if len(self.face_boxes_res) == 1:
@@ -270,32 +196,12 @@ class Check(object):
         bb = [int(box[0] * self.im_w), int(box[1] * self.im_h), int(box[2] * self.im_w), int(box[3] * self.im_h)]
         self.face_abs_width_height = [bb[2] - bb[0], bb[3] - bb[1]]
 
-        # Run landmark localisation
-        # logging.info("[Common Modules] Landmark localisation")
-        # self.face_landmarks_points, selected_points = self._face_landmark_detector.get_points()
-        # self.face_landmarks_res, selected_lmks = self._face_landmark_detector.return_coords(self.cropped_face,
-        #                                                                                     selected_points)
-        # annotated_image = self._face_landmark_detector.show_landmarks(self.cropped_face, self.face_landmarks_res)
-        # annotated_image = self._face_landmark_detector.show_landmarks(self.cropped_face, selected_lmks)
-
-        # if self._cfg["setting"]["display_image"]:
-        #     cv2.imshow("[Common] Face landmarks", annotated_image)
-        #     cv2.waitKey(0)
-
         # Run foreground/background segmentation
         logging.info("[Common Modules] Face foreground segmentation")
         self.face_fgbg_res = self._face_foreground_segmentor.segment(self.input_im)
 
         if self._cfg["setting"]["display_image"]:
             cv2.imshow("[Common] Face Foreground", self.face_fgbg_res)
-            # cv2.waitKey(0)
-
-        # Run face parsing (the return image label and image always 512 x 512 pixels)
-        # logging.info("[Common Modules] Face parsing")
-        # self.face_parsing_res = self._face_parsing_segmentor.segment(self.input_im)
-
-        # if self._cfg["setting"]["display_image"]:
-        #     cv2.imshow("[Common] Face Parsing", self.face_parsing_res["res_img_cv"])
             # cv2.waitKey(0)
 
         # Run face specular highlight detection
@@ -318,42 +224,6 @@ class Check(object):
 
         return filetype_result
 
-    # def _check_image_size(self):
-    #     """
-    #      Perform compliance check 2: image dimension
-    #      Required image dimension is defined in config file
-    #     """
-    #     return check_image_size(self._cfg, self.input_im)
-
-    # def _check_gaze(self):
-    #     """
-    #     Perform compliance check x: gaze , eyes can only look center, no blinking allowed
-    #     Threshold is defined in config file
-    #     """
-    #     return check_gaze(self._cfg, self.cropped_face, self.face_landmarks_res, self.face_parsing_res)
-
-    # def _check_haircovereye(self):
-    #     """
-    #     Perform compliance check x: hair covers eye/eyebrow
-    #     """
-    #     return check_hair_cover_eye(self._cfg, self.input_im, self.face_boxes_res, self.face_parsing_res)
-
-    # def _check_eyeclose(self):
-    #     """
-    #     Perform compliance check x: Eyes closed
-    #     """
-    #     return check_eyeclose(self._cfg, self.face_landmarks_res)
-
-    # def _check_framecovereye(self):
-    #     """
-    #     Perform compliance check x: hair covers eye/eyebrow
-    #     """
-    #     processed_img, res = check_frame_cover_eye(self._cfg, self.input_im, self.face_boxes_res, self.face_parsing_res)
-    #     if self._cfg["setting"]["display_image"]:
-    #         cv2.imshow("[Check] Frame Cover Eye", processed_img)
-    #         cv2.waitKey(0)
-    #     return res
-
     def _check_background(self):
         """
         Perform compliance check x: background check
@@ -372,62 +242,9 @@ class Check(object):
                                                   self.face_fgbg_res, 
                                                   self.check_results['background_check'], 
                                                   self.face_highlight_res)
-        # if self._cfg["setting"]["display_image"]:
-        #     cv2.imshow("[Common] Watermarks", processed_img)
     
         return status_remarks
 
-    # def _check_exposure(self):
-    #     """
-    #     Perform compliance check x: exposure check
-    #     """
-    #     return check_exposure(self._cfg, self.input_im, self.face_boxes_res, self.face_parsing_res)
-
-    # def _check_mouthopen(self):
-    #     """
-    #     Perform compliance check x: mouth open check
-    #     """
-    #     processed_img, res = check_mouthopen(self._cfg, self.cropped_face, self.face_landmarks_res)
-    #     if self._cfg["setting"]["display_image"]:
-    #         cv2.imshow("[Check] Mouth Open", processed_img)
-    #         cv2.waitKey(0)
-    #     return res
-
-    # def _check_specularhighlight(self):
-    #     """
-    #     Perform compliance check x: specular highlight check
-    #     """
-    #     processed_img, res = check_specular_highlight(self._cfg, self.input_im, self.face_abs_width_height,
-    #                                                   self.face_highlight_res["res_highlight_mask"],
-    #                                                   self.face_parsing_res)
-    #     # cv2.imshow("[Check] Specular Highlight", processed_img)
-    #     # cv2.waitKey(0)
-    #     return res
-
-    # def _check_shoulderalignment(self):
-    #     """
-    #     Perform compliance check x: shoulder alignment check
-    #     """
-    #     return self._shoulder_alignment_classifier.check_shoulderalignment(self.input_im, self.face_fgbg_res)
-
-    # def _check_pixelation(self):
-    #     """
-    #     Perform compliance check x: pixelation check
-    #     """
-    #     return self._pixelation_classifier.check_pixelation(self.input_im)
-
-    # def _post_process(self) -> BccaasResults:
-    #     logger.debug("Post-processing prediction.")
-
-    #     # Set Singapore local time
-    #     singapore_time = pytz.timezone('Asia/Singapore')
-    #     datetime_now = datetime.datetime.now()
-    #     singapore_datetime_now = datetime_now.astimezone(singapore_time)
-
-    #     return {
-    #         'completed_timestamp': singapore_datetime_now.isoformat(),
-    #         'results': self.check_results
-    #     }
 
     def process(self, payload: str):
         """
@@ -456,39 +273,11 @@ class Check(object):
             # Proceed other checks only when there is only one face detected
             if self.check_results['face_presence_check']['status'] == CheckStatus.STATUS_PASS.value:
 
-                # if self.face_location_validity:
-                #     logging.info("Performing gaze check ...")
-                #     self.check_results['gaze_check'] = self._check_gaze()
-
-                # logging.info("Performing hair cover eye check ...")
-                # self.check_results['hair_cover_eye_check'] = self._check_haircovereye()
-
-                # logging.info("Performing eyes closed check ...")
-                # self.check_results['eye_close_check'] = self._check_eyeclose()
-
-                # logging.info("Performing frame cover eye check ...")
-                # self.check_results['frame_cover_eye_check'] = self._check_framecovereye()
-
                 logging.info("Performing background check ...")
                 self.check_results['background_check'] = self._check_background()
 
                 logging.info("Performing watermark check ...")
                 self.check_results['watermark_check'] = self._check_watermark()
-
-                # logging.info("Performing exposure check ...")
-                # self.check_results['exposure_check'] = self._check_exposure()
-
-                # logging.info("Performing mouth open check ...")
-                # self.check_results['mouth_open_check'] = self._check_mouthopen()
-
-                # logging.info("Performing specular highlight check ...")
-                # self.check_results['skin_specular_reflection_check'] = self._check_specularhighlight()
-
-                # logging.info("Performing shoulder alignment check ...")
-                # self.check_results['shoulder_alignment_check'] = self._check_shoulderalignment()
-
-                # logging.info("Performing pixelation check ...")
-                # self.check_results['pixelation_check'] = self._check_pixelation()
 
         else:
             logger.error("File type error or image not readable.")

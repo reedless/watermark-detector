@@ -1,90 +1,11 @@
-# from PIL import Image
-# import numpy as np
 import cv2
-# import os.path as osp
-# import os
-# import sys
-# import datetime
 import torch
-# from tqdm import tqdm
-# import time
-# import logging
-# import matplotlib.pyplot as plt
-# from glob import glob
-# from detectron2.utils.logger import setup_logger
-# from detectron2.structures import BoxMode
-# from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.data import MetadataCatalog
-# from detectron2.engine import DefaultTrainer
-# from detectron2.engine.hooks import HookBase
-# from detectron2.evaluation import COCOEvaluator
-# from detectron2.utils.logger import log_every_n_seconds
-# from detectron2.data import DatasetMapper, build_detection_test_loader
-# from detectron2.checkpoint import DetectionCheckpointer
-# import detectron2.utils.comm as comm
 from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
 from detectron2.utils.visualizer import ColorMode
-
-# setup_logger()
-
-# def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
-
-#     input_image_files = sorted(os.listdir(input_image_path))
-#     watermark_mask_files = sorted(os.listdir(watermark_mask_path))
-#     word_mask_files = sorted(os.listdir(word_mask_path))
-
-#     dataset_dicts = []
-
-#     for id in tqdm(range(len(input_image_files))):
-#         if input_image_files[id][-15:] == 'Zone.Identifier':
-#             continue
-#         input_image_file = osp.join(input_image_path, input_image_files[id])
-#         watermark_mask_file = osp.join(watermark_mask_path, watermark_mask_files[id])
-#         word_mask_file = osp.join(word_mask_path, word_mask_files[id])
-
-#         watermark_mask_img = Image.open(watermark_mask_file)
-#         word_mask_img = Image.open(word_mask_file)
-
-#         img_width, img_height = watermark_mask_img.size
-#         record = {"file_name": input_image_file,
-#                   "height": img_height,
-#                   "width": img_width,
-#                   "image_id": id,
-#                   "annotations": []}
-
-#         for idx, mask in enumerate([watermark_mask_img, word_mask_img]):
-#             W = np.array(mask).astype(np.uint8)
-
-#             img_gray = cv2.cvtColor(W, cv2.COLOR_BGR2GRAY)
-#             _, thresh = cv2.threshold(img_gray, 100, 255, cv2.THRESH_BINARY)
-#             kernel = np.ones((3, 3), np.uint8)
-#             thresh = cv2.dilate(thresh, kernel, iterations=1)
-#             contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#             contours = [contour for contour in contours if contour.shape[0] > 3]
-
-#             objs = []
-#             for contour in contours:
-#                 pairs = [pair[0] for pair in contour]
-#                 px = [int(a[0]) for a in pairs]
-#                 py = [int(a[1]) for a in pairs]
-#                 poly = [int(p) for x in pairs for p in x]
-
-#                 obj = {
-#                     "bbox": [np.min(px), np.min(py), np.max(px), np.max(py)],
-#                     "bbox_mode": BoxMode.XYXY_ABS,
-#                     "segmentation": [poly],
-#                     "category_id": idx,
-#                     "iscrowd": 0
-#                 }
-#                 objs.append(obj)
-#             record['annotations'] += objs
-
-#         dataset_dicts.append(record)
-
-#     return dataset_dicts
 
 def check_watermark(cfg, input_im, face_foregroun_background_res, background_check_result, face_highlight_res):
     model_cfg = get_cfg()
