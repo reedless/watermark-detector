@@ -47,11 +47,11 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
         # don't add instance if background is not white and watermark instance is mostly in the background
         # need to < 5 as face_foreground_background_res is array of [0, 255]
         if (background_check_result["status"] == 0 and 
-            significant_overlap(instance, face_foreground_background_res[:,:,0].reshape(-1) < 5, 0.9)):
+            significant_overlap(instance, face_foreground_background_res[:,:,0].reshape(-1) < 250, 0.8)):
                 continue
 
         # don't add instance if watermark is mostly a specular reflection
-        if significant_overlap(instance, face_highlight_res["res_highlight_mask"].reshape(-1), 0.9):
+        if significant_overlap(instance, face_highlight_res["res_highlight_mask"].reshape(-1), 0.6):
             continue
 
         # add to selected index

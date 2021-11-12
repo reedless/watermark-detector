@@ -300,6 +300,7 @@ if __name__ == '__main__':
     for i in tqdm(os.listdir('dataset/benchmarkv2')):
         if i[-15:] == 'Zone.Identifier':
             continue
+    # i = 'clean_Img_00196.jpg'
 
         with open(f'dataset/benchmarkv2/{i}', "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
