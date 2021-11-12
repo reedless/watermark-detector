@@ -23,15 +23,23 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
     else:
         model_cfg.MODEL.DEVICE = "cpu"
 
+    predictor = DefaultPredictor(model_cfg)
+    processed_img = predictor(input_im)
+
     print(f"Size: {face_foreground_background_res[:,:,0].size}")
     print(f"Size: {len(face_foreground_background_res[:,:,0].reshape(-1))}")
     
     print("Highlight Binary Mask")
     print(len(face_highlight_res["res_highlight_mask"].reshape(-1)))
 
-    processed_img = 0
+    v = Visualizer(input_im[:, :, ::-1],
+                    metadata=MetadataCatalog.get("watermarks_train"),
+                    scale=1,
+                    instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+                    )
+    v = v.draw_instance_predictions(processed_img["instances"].to("cpu"))
 
-    return {'status': 0, 'remarks': 'Watermark detected.'}, processed_img
+    return {'status': 0, 'remarks': 'Watermark detected.'}, cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB)
 
 if __name__ == '__main__':
 

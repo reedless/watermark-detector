@@ -242,7 +242,10 @@ class Check(object):
                                                   self.face_fgbg_res, 
                                                   self.check_results['background_check'], 
                                                   self.face_highlight_res)
-    
+                                                  
+        if self._cfg["setting"]["display_image"]:
+                cv2.imshow("Watermark Image", processed_img)
+
         return status_remarks
 
 
