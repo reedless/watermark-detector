@@ -81,7 +81,7 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
         status = 1
         remarks = 'No watermark detected.'
 
-    return {'status': status, 'remarks': remarks}, cv2.cvtColor(v.get_image()[:, :, ::-1], cv2.COLOR_BGR2RGB)
+    return {'status': status, 'remarks': remarks}, v.get_image()[:, :, ::-1]
 
 if __name__ == '__main__':
 

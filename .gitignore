@@ -6,8 +6,7 @@ output_cache
 data.zip
 dataset.zip
 .ipynb_checkpoints/
-data_20211101.zip
-data_cache.zip
+data_*.zip
 models/
 output_*/
 **/__pycache__/

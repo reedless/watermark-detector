@@ -102,7 +102,7 @@ def load_words(img, prob=0.5):
             canvas = imutils.rotate(canvas, -rotate_angle)
             colored_canvas = imutils.rotate(colored_canvas, -rotate_angle)
 
-    alpha = random.uniform(0.2, 0.4)
+    alpha = random.uniform(0.3, 1)
     _, canvas_mask = cv2.threshold(canvas, 50, 255, cv2.THRESH_BINARY)
     img[np.where(canvas_mask == 255)] = cv2.addWeighted(img, 1-alpha, colored_canvas, alpha, 0)[np.where(canvas_mask == 255)]
 
@@ -160,7 +160,7 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files, prob
     # img = torch.from_numpy(img)
     logo = transform_totensor(logo_resize)
 
-    alpha = random.uniform(0.2, 0.4)  # 0.8
+    alpha = random.uniform(0.3, 1)  # 0.8
     start_height = random.randint(0, img_height - logo_height)
     start_width = random.randint(0, img_width - logo_width)
 
@@ -193,7 +193,7 @@ def solve_mask(img, img_target):
 
 def main():
     results_folder = 'data'  # folder to store generated dataset, needs to contain photos and watermarks
-    generated_per_file = 2  # number of pictures generated from one photo
+    generated_per_file = 4  # number of pictures generated from one photo
 
     labels = ['train', 'test', 'val']
     for label in labels:

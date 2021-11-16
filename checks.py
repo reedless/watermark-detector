@@ -15,6 +15,7 @@ from check_components.common.facesegment.specular_highlight_segment import Specu
 from check_components.filetype_check.filetype import check_file_type
 from check_components.background_check.background import check_background
 from check_components.watermark_check.watermark import check_watermark
+from check_components.pixelation_check.pixelation import PixelationClassifier
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
@@ -96,6 +97,9 @@ class Check(object):
             'background_check': {
                 "status": CheckStatus.STATUS_UNKNOWN,
                 "remarks": _INVALID_REMARKS},
+            'pixelation_check': {
+                 "status": CheckStatus.STATUS_UNKNOWN,
+                 "remarks": _INVALID_REMARKS},
             'watermark_check': {
                 "status": CheckStatus.STATUS_UNKNOWN,
                 "remarks": _INVALID_REMARKS},
@@ -118,7 +122,7 @@ class Check(object):
 
             logger.info("Loading check specific models")
             # self._shoulder_alignment_classifier = ShoulderAlignmentClassifier(self._cfg)
-            # self._pixelation_classifier = PixelationClassifier(self._cfg)
+            self._pixelation_classifier = PixelationClassifier(self._cfg)
             logger.info("Check specific models successfully loaded")
 
     def _process_common(self):
@@ -281,6 +285,9 @@ class Check(object):
                 logging.info("Performing background check ...")
                 self.check_results['background_check'] = self._check_background()
 
+                logging.info("Performing pixelation check ...")
+                self.check_results['pixelation_check'] = self._check_pixelation()
+
                 logging.info("Performing watermark check ...")
                 self.check_results['watermark_check'], processed_img = self._check_watermark()
 
@@ -297,29 +304,29 @@ class Check(object):
 
 if __name__ == '__main__':
     checkMain = Check('app_config.yml')
-    for i in tqdm(os.listdir('dataset/benchmarkv2')):
-        if i[-15:] == 'Zone.Identifier':
-            continue
-    # i = 'clean_Img_00196.jpg'
+    # for i in tqdm(os.listdir('dataset/benchmarkv2')):
+    #     if i[-15:] == 'Zone.Identifier':
+    #         continue
+    i = 'Stamp_005.jpg'
 
-        with open(f'dataset/benchmarkv2/{i}', "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
+    with open(f'dataset/{i}', "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read())
 
-        check_results, input_img, processed_img, face_fgbg_res, face_highlight_res = checkMain.process(encoded_string)
+    check_results, input_img, processed_img, face_fgbg_res, face_highlight_res = checkMain.process(encoded_string)
 
-        fig, ax = plt.subplots(2, 2, figsize=(14, 10))
-        ax[0][0].imshow(processed_img)
+    fig, ax = plt.subplots(2, 2, figsize=(14, 10))
+    ax[0][0].imshow(processed_img)
 
-        ax[0][1].imshow(input_img[:, :, ::-1])
+    ax[0][1].imshow(input_img[:, :, ::-1])
 
-        ax[1][0].imshow(face_fgbg_res)
-        ax[1][1].imshow(face_highlight_res)
+    ax[1][0].imshow(face_fgbg_res)
+    ax[1][1].imshow(face_highlight_res)
 
-        if not os.path.exists('./output/benchmarkv2'):
-            os.mkdir('./output/benchmarkv2')
-        os.makedirs('./output/benchmarkv2/', exist_ok=True)
-        plt.savefig(f'./output/benchmarkv2/{i}')
-        plt.close()
+    # if not os.path.exists('./output/benchmarkv2'):
+    #     os.mkdir('./output/benchmarkv2')
+    # os.makedirs('./output/benchmarkv2/', exist_ok=True)
+    plt.savefig(f'./output/{i}')
+    plt.close()
 
-        for key in check_results.keys():
-            print(key, check_results[key])
+    for key in check_results.keys():
+        print(key, check_results[key])
