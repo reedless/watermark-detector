@@ -1,0 +1,1 @@
+docker run --detach -t --gpus device=0 -v $PWD:/app --network=host --shm-size=32G --name watermark_training watermark-detector:v0

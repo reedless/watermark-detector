@@ -1,0 +1,1 @@
+docker exec -d watermark_training python3 -u train_watermarks.py train | sudo tee output.log
