@@ -260,7 +260,7 @@ if __name__ == '__main__':
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_X_101_32x8d_FPN_3x.yaml")
     cfg.SOLVER.IMS_PER_BATCH = 8
     cfg.SOLVER.BASE_LR = 0.00025
-    cfg.SOLVER.MAX_ITER = 8000
+    cfg.SOLVER.MAX_ITER = 10000
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2
     cfg.MODEL.DEVICE = "cuda"
     # cfg.MODEL.DEVICE = "cpu"
@@ -305,7 +305,9 @@ if __name__ == '__main__':
         evaluator = COCOEvaluator("watermarks_test", cfg, False, output_dir="./output/")
         val_loader = build_detection_test_loader(cfg, "watermarks_test")
         
-        print(inference_on_dataset(trainer.model, val_loader, evaluator))
+        results = inference_on_dataset(trainer.model, val_loader, evaluator)
+        print(results)
+        # OrderedDict([('bbox', {'AP': 0.00285776080062039, 'AP50': 0.020311009574076548, 'AP75': 4.35212182041596e-05, 'APs': 0.0020339268161329352, 'APm': 0.007365146422805501, 'APl': nan, 'AP-watermark': 0.0012693577050012692, 'AP-text': 0.00444616389623951}), ('segm', {'AP': 0.0019507988339442725, 'AP50': 0.009935738327304478, 'AP75': 0.00014332041122601966, 'APs': 0.0015884719579378104, 'APm': 0.0035455259489047403, 'APl': nan, 'AP-watermark': 0.0, 'AP-text': 0.003901597667888545})])
 
     elif sys.argv[1] == "test":
         # test_folder = f'{data_path}/test/input'
