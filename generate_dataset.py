@@ -231,6 +231,12 @@ def main():
                 watermarked_and_word_img, watermarked_img = load_watermark(img_original, word_img, watermark_path,
                                                                            watermark_files)
 
+                blurrer = transforms.GaussianBlur(kernel_size=(5, 9), sigma=(1,1))
+                img_original = blurrer(img_original)
+                word_img = blurrer(word_img)
+                watermarked_img = blurrer(watermarked_img)
+                watermarked_and_word_img = blurrer(watermarked_and_word_img)
+
                 # stitch image to lower false-positives
                 img_comb_free = torch.cat([img_original, img_original], dim=2)
 
