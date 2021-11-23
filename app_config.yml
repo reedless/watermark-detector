@@ -2,7 +2,7 @@
 setting:
   force_cpu               : False  # True: force all models to run in CPU mode; False: use individual "use_gpu" flag 
   verbose                 : True  # Print out debug info
-  display_image           : True # Display debug images, set to False during production
+  display_image           : False # Display debug images, set to False during production
 
 capability:
   cap_gaze                : True
@@ -139,6 +139,6 @@ pixelation_check:
   use_gpu                 : True # Enable this only if GPU memory > 4GB
 
 watermark_check:
-  model_path              : models/watermark/best_model.pth
-  # model_path              : output/best_model.pth
+  # model_path              : models/watermark/best_model.pth
+  model_path              : output/best_model.pth
   use_gpu                 : True

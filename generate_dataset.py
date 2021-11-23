@@ -70,7 +70,7 @@ def load_words(img, prob=0.5):
         font = random.choice(fonts)
 
         # random font scale
-        fontScale = random.uniform(0.1, 1)
+        fontScale = random.uniform(0.1, 2)
 
         # randomly have 1/4 rgb and 3/4 white text
         fontColor = ((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) 
@@ -152,8 +152,10 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files, prob
     rotate_angle = random.randint(0, 360)
     logo_rotate = logo.rotate(rotate_angle, expand=True)
 
-    logo_height = random.randint(60, 100)  # maybe tweak 256/4
-    logo_width = int(logo_height * (random.random() + 0.7))  # mutiply 0.7 ~ 1.7
+    logo_height = random.randint(img_height//4, img_height//2)  # maybe tweak 256/4
+    logo_width = int(logo_height * (random.uniform(0.5, 2)))  # mutiply 0.5 ~ 2
+    if logo_width > img_width:
+        logo_width = img_width
     logo_resize = logo_rotate.resize((logo_height, logo_width))
 
     transform_totensor = transforms.Compose([transforms.ToTensor()])
