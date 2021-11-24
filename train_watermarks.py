@@ -95,12 +95,12 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
                     objs.append(obj)
                 record['annotations'] += objs
         else: # if hard negative samples
-            record["file_name"] = input_image_file
             im = cv2.imread(input_image_file)
-            record["height"] = im.shape[0]
-            record["width"] = im.shape[1]
-            record["image_id"] = file_id
-            record["annotations"] = []  #supply as empty list
+            record = {"file_name": input_image_file,
+                    "height": im.shape[0],
+                    "width": im.shape[1],
+                    "image_id": file_id,
+                    "annotations": []}
 
         dataset_dicts.append(record)
 
