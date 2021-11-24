@@ -52,9 +52,10 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
     for id in tqdm(range(len(input_image_files))):
         if input_image_files[id][-15:] == 'Zone.Identifier':
             continue
-        input_image_file = osp.join(input_image_path, input_image_files[id])
-        watermark_mask_file = osp.join(watermark_mask_path, watermark_mask_files[id])
-        word_mask_file = osp.join(word_mask_path, word_mask_files[id])
+        file_id = input_image_files[id]
+        input_image_file = osp.join(input_image_path, file_id)
+        watermark_mask_file = osp.join(watermark_mask_path, file_id)
+        word_mask_file = osp.join(word_mask_path, file_id)
 
         if os.path.isfile(watermark_mask_file):
             watermark_mask_img = Image.open(watermark_mask_file)
@@ -98,7 +99,7 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
             im = cv2.imread(input_image_file)
             record["height"] = im.shape[0]
             record["width"] = im.shape[1]
-            record["image_id"] = input_image_files[id]
+            record["image_id"] = file_id
             record["annotations"] = []  #supply as empty list
 
         dataset_dicts.append(record)
