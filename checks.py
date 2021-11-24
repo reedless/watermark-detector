@@ -242,7 +242,7 @@ class Check(object):
         Perform compliance check x: watermark check
         """
 
-        status_remarks, processed_img, raw_processed_img =  check_watermark(self._cfg, 
+        status_remarks, processed_img, processed_specular, raw_processed_img =  check_watermark(self._cfg, 
                                                   self.input_im, 
                                                   self.face_fgbg_res, 
                                                   self.check_results['background_check'], 
@@ -251,7 +251,7 @@ class Check(object):
         if self._cfg["setting"]["display_image"]:
                 cv2.imshow("Watermark Image", processed_img)
 
-        return status_remarks, processed_img, raw_processed_img
+        return status_remarks, processed_img, processed_specular, raw_processed_img
 
 
     def process(self, payload: str):
@@ -288,7 +288,7 @@ class Check(object):
                 # self.check_results['pixelation_check'] = self._check_pixelation()
 
                 logging.info("Performing watermark check ...")
-                self.check_results['watermark_check'], processed_img, raw_processed_img = self._check_watermark()
+                self.check_results['watermark_check'], processed_img, processed_specular, raw_processed_img = self._check_watermark()
 
         else:
             logger.error("File type error or image not readable.")
@@ -299,7 +299,7 @@ class Check(object):
             cv2.waitKey(0)
             # cv2.destroyAllWindows()
 
-        return self.check_results, self.input_im, processed_img, self.face_fgbg_res, self.face_highlight_res["res_img_cv"], raw_processed_img
+        return self.check_results, self.input_im, processed_img, processed_specular, self.face_fgbg_res, self.face_highlight_res["res_img_cv"], raw_processed_img
 
 if __name__ == '__main__':
     checkMain = Check('app_config.yml')
@@ -312,7 +312,7 @@ if __name__ == '__main__':
             print(i)
             encoded_string = base64.b64encode(image_file.read())
 
-        check_results, input_img, processed_img, face_fgbg_res, face_highlight_res, raw_processed_img = checkMain.process(encoded_string)
+        check_results, input_img, processed_img, processed_specular, face_fgbg_res, face_highlight_res, raw_processed_img = checkMain.process(encoded_string)
 
         fig, ax = plt.subplots(2, 2, figsize=(14, 10))
         ax[0][0].imshow(processed_img)
@@ -320,7 +320,7 @@ if __name__ == '__main__':
         ax[0][1].imshow(input_img[:, :, ::-1])
 
         ax[1][0].imshow(raw_processed_img)
-        ax[1][1].imshow(face_fgbg_res)
+        ax[1][1].imshow(processed_specular)
 
         if not os.path.exists('./output/benchmarkv3'):
             os.mkdir('./output/benchmarkv3')

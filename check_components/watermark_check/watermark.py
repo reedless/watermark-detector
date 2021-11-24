@@ -44,6 +44,7 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
     output = predictor(input_im)
 
     selected_idx = []
+    only_remove_specular_idx = []
     removed_background_watermarks = 0
     removed_specular_watermarks = 0
 
@@ -58,6 +59,7 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
         if (background_check_result["status"] == 0 and 
             significant_overlap(instance, face_foreground_background_res[:,:,0].reshape(-1) < 250, 0.8)):
                 removed_background_watermarks += 1
+                only_remove_specular_idx.append(i)
                 continue
 
         # don't add instance if watermark is mostly a specular reflection
@@ -67,7 +69,9 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
 
         # add to selected index
         selected_idx.append(i)
+        only_remove_specular_idx.append(i)
 
+    # selected_idx
     o = output['instances']
     classes = o.pred_classes[selected_idx]
     scores = o.scores[selected_idx]
@@ -88,6 +92,28 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
                     )
     v_result = v.draw_instance_predictions(filtered_instances.to("cpu"))
 
+    # only remove specular highlights
+    o = output['instances']
+    classes = o.pred_classes[only_remove_specular_idx]
+    scores = o.scores[only_remove_specular_idx]
+    boxes = o.pred_boxes[only_remove_specular_idx]
+    masks = o.pred_masks[only_remove_specular_idx]
+
+    filtered_instances_specular = Instances(image_size=(618, 516))
+
+    filtered_instances_specular.set('pred_classes', classes)
+    filtered_instances_specular.set('scores', scores)
+    filtered_instances_specular.set('pred_boxes', boxes)
+    filtered_instances_specular.set('pred_masks', masks)
+
+    v_2 = Visualizer(input_im[:, :, ::-1],
+                    metadata=MetadataCatalog.get("watermarks_train"),
+                    scale=1,
+                    instance_mode=ColorMode.IMAGE_BW  # remove the colors of unsegmented pixels
+                    )
+
+    v_result_specular = v_2.draw_instance_predictions(filtered_instances_specular.to("cpu"))
+
     if len(filtered_instances) == 0:
         status = 1
         remarks = 'No watermark detected.'
@@ -98,6 +124,7 @@ def check_watermark(cfg, input_im, face_foreground_background_res, background_ch
 
     return ({'status': status, 'remarks': remarks}, 
              v_result.get_image()[:, :, ::-1], 
+             v_result_specular.get_image()[:, :, ::-1],
              v.draw_instance_predictions(output['instances'].to("cpu")).get_image()[:, :, ::-1])
 
 if __name__ == '__main__':
