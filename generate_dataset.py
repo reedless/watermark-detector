@@ -40,7 +40,7 @@ def load_words(img, prob=0.5):
     img_original = img.copy()
 
     # some images will not have words loaded
-    if random.random() < prob:
+    if random.random() > prob:
         img_original = (torch.from_numpy(cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB)).permute(2, 0, 1) / 255).to(
         torch.float32)
         return img_original, img_original
@@ -142,7 +142,8 @@ def load_watermark(img_original, word_img, watermark_path, watermark_files, prob
     img_original = img_original.clone()
     word_img = word_img.clone()
 
-    if random.random() < prob:
+    # some images will not have watermarks loaded
+    if random.random() > prob:
         return word_img, img_original
 
     logo_id = random.randint(0, len(watermark_files) - 1)
@@ -195,9 +196,9 @@ def solve_mask(img, img_target):
 
 def main():
     results_folder = 'data'  # folder to store generated dataset, needs to contain photos and watermarks
-    generated_per_file = 4  # number of pictures generated from one photo
+    generated_per_file = 1  # number of pictures generated from one photo
 
-    labels = ['train', 'test', 'val']
+    labels = ['train', 'val']
     for label in labels:
 
         print(f">> Generating images for {label} set")
@@ -221,71 +222,84 @@ def main():
         os.makedirs(words_mask_path, exist_ok=True)
 
         i = 1
+        blurrer = transforms.GaussianBlur(kernel_size=(5, 9), sigma=(1,1))
+
         for photo in tqdm(photo_files):
             if photo[-15:] == 'Zone.Identifier':
                 continue
-            for _ in range(generated_per_file):
 
+            # 60% of input images are hard negatives
+            if random.random() < 0.6:
                 img = Image.open(osp.join(photo_path, photo))
                 img = img.resize((256, 256))
-
-                word_img, img_original = load_words(img)
-                watermarked_and_word_img, watermarked_img = load_watermark(img_original, word_img, watermark_path,
-                                                                           watermark_files)
-
-                blurrer = transforms.GaussianBlur(kernel_size=(5, 9), sigma=(1,1))
-                img_original = blurrer(img_original)
-                word_img = blurrer(word_img)
-                watermarked_img = blurrer(watermarked_img)
-                watermarked_and_word_img = blurrer(watermarked_and_word_img)
-
-                # stitch image to lower false-positives
-                img_comb_free = torch.cat([img_original, img_original], dim=2)
-
-                if random.random() > 0.5:
-                    # append img_original to the left
-                    img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
-                    watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
-                    word_comb_mask = torch.cat([word_img, img_original], dim=2)
-                else:
-                    # append img_original to the right
-                    img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
-                    watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
-                    word_comb_mask = torch.cat([img_original, word_img], dim=2)
-
-                # solve for binary masks
-                watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
-                word_mask = solve_mask(word_comb_mask, img_comb_free)
-
-                # '''debugging'''
-                # # print(logo_height, logo_width, alpha, watermark_files[logo_id], logo_height, logo_width, flag)
-                # watermarked_mask *= 256
-                # word_mask += 256
-                #
-                # fig, ax = plt.subplots(1,3, figsize = (20,10))
-                # ax[0].imshow(watermarked_mask, cmap='gray')
-                # ax[1].imshow(word_mask, cmap='gray')
-                # ax[2].imshow(np.array(img_comb_mask.permute(1, 2, 0)))
-                #
-                # plt.show()
-                # quit()
-
-                '''saving'''
+                img = np.array(img).astype(np.uint8)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = ((torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                            .permute(2, 0, 1) / 255)
+                            .to(torch.float32))
+                img = blurrer(img)
                 save_id = f'{i}.jpg'
                 cv2.imwrite(osp.join(img_input_path, save_id),
-                            cv2.cvtColor(np.array(img_comb_mask.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
-
-                cv2.imwrite(osp.join(watermark_mask_path, save_id),
-                            np.concatenate((watermarked_mask[:, :, np.newaxis],
-                                            watermarked_mask[:, :, np.newaxis],
-                                            watermarked_mask[:, :, np.newaxis]), 2) * 256.0)
-
-                cv2.imwrite(osp.join(words_mask_path, save_id),
-                            np.concatenate((word_mask[:, :, np.newaxis],
-                                            word_mask[:, :, np.newaxis],
-                                            word_mask[:, :, np.newaxis]), 2) * 256.0)
-
+                            cv2.cvtColor(np.array(img.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
                 i += 1
+
+            else: # 40% of input images are positives
+                for _ in range(generated_per_file):
+
+                    img = Image.open(osp.join(photo_path, photo))
+                    img = img.resize((256, 256))
+
+                    word_img, img_original = load_words(img, prob=1)
+                    watermarked_and_word_img, watermarked_img = load_watermark(img_original, word_img, watermark_path,
+                                                                            watermark_files, prob=1)
+
+                    img_original = blurrer(img_original)
+                    word_img = blurrer(word_img)
+                    watermarked_img = blurrer(watermarked_img)
+                    watermarked_and_word_img = blurrer(watermarked_and_word_img)
+
+                    # half of positive input images are stitched positives
+                    if random.random() < 0.5:
+                        img_comb_free = torch.cat([img_original, img_original], dim=2)
+
+                        if random.random() > 0.5:
+                            # append img_original to the left
+                            img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
+                            watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
+                            word_comb_mask = torch.cat([word_img, img_original], dim=2)
+                        else:
+                            # append img_original to the right
+                            img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
+                            watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
+                            word_comb_mask = torch.cat([img_original, word_img], dim=2)
+                    
+                    # half of positive input images are hard positives, ie no stitching
+                    else: 
+                        img_comb_free = img_original
+                        img_comb_mask = watermarked_and_word_img
+                        watermarked_comb_mask = watermarked_img
+                        word_comb_mask = word_img
+                   
+                    # solve for binary masks
+                    watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
+                    word_mask = solve_mask(word_comb_mask, img_comb_free)
+
+                    '''saving'''
+                    save_id = f'{i}.jpg'
+                    cv2.imwrite(osp.join(img_input_path, save_id),
+                                cv2.cvtColor(np.array(img_comb_mask.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
+
+                    cv2.imwrite(osp.join(watermark_mask_path, save_id),
+                                np.concatenate((watermarked_mask[:, :, np.newaxis],
+                                                watermarked_mask[:, :, np.newaxis],
+                                                watermarked_mask[:, :, np.newaxis]), 2) * 256.0)
+
+                    cv2.imwrite(osp.join(words_mask_path, save_id),
+                                np.concatenate((word_mask[:, :, np.newaxis],
+                                                word_mask[:, :, np.newaxis],
+                                                word_mask[:, :, np.newaxis]), 2) * 256.0)
+
+                    i += 1
 
 
 if __name__ == "__main__":
