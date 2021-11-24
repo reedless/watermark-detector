@@ -65,7 +65,7 @@ def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
             record = {"file_name": input_image_file,
                     "height": img_height,
                     "width": img_width,
-                    "image_id": id,
+                    "image_id": file_id,
                     "annotations": []}
 
             for idx, mask in enumerate([watermark_mask_img, word_mask_img]):
