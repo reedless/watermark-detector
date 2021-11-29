@@ -44,8 +44,6 @@ def image_files_from_folder(folder, upper=True):
 def get_dataset_dicts(input_image_path, watermark_mask_path, word_mask_path):
 
     input_image_files = sorted(os.listdir(input_image_path))
-    watermark_mask_files = sorted(os.listdir(watermark_mask_path))
-    word_mask_files = sorted(os.listdir(word_mask_path))
 
     dataset_dicts = []
 
