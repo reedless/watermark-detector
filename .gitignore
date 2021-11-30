@@ -10,3 +10,6 @@ data_*.zip
 models/
 output_*/
 **/__pycache__/
+input*.zip
+output.log
+train_headgear_segmentation.py

@@ -228,8 +228,8 @@ def main():
             if photo[-15:] == 'Zone.Identifier':
                 continue
 
-            # 80% of input images are hard negatives
-            if random.random() < 0.8:
+            # 5/7 of input images are hard negatives
+            if random.random() < (5/7):
                 img = Image.open(osp.join(photo_path, photo))
                 img = img.resize((256, 256))
                 img = np.array(img).astype(np.uint8)
@@ -243,7 +243,7 @@ def main():
                             cv2.cvtColor(np.array(img.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
                 i += 1
 
-            else: # 20% of input images are positives
+            else: # 2/7 of input images are positives
                 # for _ in range(generated_per_file):
 
                 img = Image.open(osp.join(photo_path, photo))

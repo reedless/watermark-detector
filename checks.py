@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from check_components.common.utils.CheckStatus import CheckStatus
 from check_components.common.utils.CheckConfig import CheckConfig
 from check_components.common.facedetector.face_detection import FaceDetection
+from check_components.common.facelandmark.face_landmark import FaceLandmark
 from check_components.common.facesegment.foreground_segment import ForegroundSegmentation
 from check_components.common.facesegment.face_parsing import FaceParsing
 from check_components.common.facesegment.specular_highlight_segment import SpecularHighlightSegmentation
@@ -113,7 +114,7 @@ class Check(object):
 
             logger.info("Loading common modules...")
             self._face_detector = FaceDetection(self._cfg)
-            # self._face_landmark_detector = FaceLandmark(self._cfg)
+            self._face_landmark_detector = FaceLandmark(self._cfg)
             self._face_foreground_segmentor = ForegroundSegmentation(self._cfg)
             self._face_parsing_segmentor = FaceParsing(self._cfg)
             self._face_highlight_segmentor = SpecularHighlightSegmentation(self._cfg)
@@ -131,7 +132,6 @@ class Check(object):
 
         if self._cfg["setting"]["display_image"]:
             cv2.imshow("Input Image", self.input_im)
-            # cv2.waitKey(0)
 
         # Run face detection
         logging.info("[Common Modules] Face detection")
@@ -171,7 +171,6 @@ class Check(object):
 
                 if self._cfg["setting"]["display_image"]:
                     cv2.imshow("Cropped_face_margin", cropped_face_margin)
-                    # cv2.waitKey(0)
 
                 # Recompute bounding box
                 self.input_im = cropped_face_margin
@@ -203,13 +202,34 @@ class Check(object):
         bb = [int(box[0] * self.im_w), int(box[1] * self.im_h), int(box[2] * self.im_w), int(box[3] * self.im_h)]
         self.face_abs_width_height = [bb[2] - bb[0], bb[3] - bb[1]]
 
+
+        # Run landmark localisation
+        logger.info("[Common Modules] Running landmark localisation")
+        self.face_landmarks_points, selected_points = self._face_landmark_detector.get_points()
+        self.face_landmarks_res, selected_lmks = self._face_landmark_detector.return_coords(self.cropped_face,
+                                                                                            selected_points)
+        annotated_image = self._face_landmark_detector.show_landmarks(self.cropped_face, self.face_landmarks_res)
+        # annotated_image = self._face_landmark_detector.show_landmarks(self.cropped_face, selected_lmks)
+
+        if self._cfg["setting"]["display_image"]:
+            cv2.imshow("[Common] Face landmarks", annotated_image)
+
+
         # Run foreground/background segmentation
         logging.info("[Common Modules] Face foreground segmentation")
         self.face_fgbg_res = self._face_foreground_segmentor.segment(self.input_im)
 
         if self._cfg["setting"]["display_image"]:
             cv2.imshow("[Common] Face Foreground", self.face_fgbg_res)
-            # cv2.waitKey(0)
+
+        
+        # Run face parsing (the return image label and image always 512 x 512 pixels)
+        logger.info("[Common Modules] Running face parsing")
+        self.face_parsing_res = self._face_parsing_segmentor.segment(self.input_im)
+
+        if self._cfg["setting"]["display_image"]:
+            cv2.imshow("[Common] Face Parsing", self.face_parsing_res["res_img_cv"])
+
 
         # Run face specular highlight detection
         logging.info("[Common Modules] Face specular highlight segmentation")
@@ -217,7 +237,6 @@ class Check(object):
 
         if self._cfg["setting"]["display_image"]:
             cv2.imshow("[Common] Specular Highlight", self.face_highlight_res["res_img_cv"])
-            # cv2.waitKey(0)
 
     def _check_file_type(self, base64_img_str: str):
         """
@@ -306,7 +325,7 @@ if __name__ == '__main__':
     for i in tqdm(os.listdir('dataset/benchmarkv3')):
         if i[-15:] == 'Zone.Identifier':
             continue
-    # i = 'watermarked_stamp2.jpg'
+    # i = 'clean_Img_001484.jpg'
 
         with open(f'dataset/benchmarkv3/{i}', "rb") as image_file:
             print(i)
