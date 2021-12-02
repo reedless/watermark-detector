@@ -12,6 +12,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import string
 import imutils
+import shutil
 
 
 def load_words(img, prob=1):
@@ -216,6 +217,10 @@ def main():
         watermark_mask_path = osp.join(results_path, 'mask_watermark')
         words_mask_path = osp.join(results_path, 'mask_word')
         img_input_path = osp.join(results_path, 'input')
+
+        shutil.rmtree(watermark_mask_path, ignore_errors=True)
+        shutil.rmtree(words_mask_path, ignore_errors=True)
+        shutil.rmtree(img_input_path, ignore_errors=True)
 
         os.makedirs(watermark_mask_path, exist_ok=True)
         os.makedirs(img_input_path, exist_ok=True)
