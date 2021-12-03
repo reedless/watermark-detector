@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import string
 import imutils
 import shutil
+import datetime
 
 
 def load_words(img, prob=1):
@@ -233,10 +234,27 @@ def main():
             if photo[-15:] == 'Zone.Identifier':
                 continue
 
+            indiv_photo_path = osp.join(photo_path, photo)
+            img = Image.open(indiv_photo_path)
+            img = img.resize((256, 256))
+
+            # hard negative for all photos that are newly added
+            if (os.path.getmtime(indiv_photo_path) < datetime.date(2021,9,20).timestamp() or 
+                os.path.getmtime(indiv_photo_path) > datetime.date(2021,9,22).timestamp()):
+                img = np.array(img).astype(np.uint8)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                img = ((torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                            .permute(2, 0, 1) / 255)
+                            .to(torch.float32))
+                img = blurrer(img)
+                save_id = f'{i}.jpg'
+                cv2.imwrite(osp.join(img_input_path, save_id),
+                            cv2.cvtColor(np.array(img.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
+                i += 1
+                continue
+
             # 5/7 of input images are hard negatives
             if random.random() < (5/7):
-                img = Image.open(osp.join(photo_path, photo))
-                img = img.resize((256, 256))
                 img = np.array(img).astype(np.uint8)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 img = ((torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
@@ -251,9 +269,6 @@ def main():
             else: # 2/7 of input images are positives
                 # for _ in range(generated_per_file):
 
-                img = Image.open(osp.join(photo_path, photo))
-                img = img.resize((256, 256))
-
                 word_img, img_original = load_words(img, prob=1)
                 watermarked_and_word_img, watermarked_img = load_watermark(img_original, word_img, watermark_path,
                                                                         watermark_files, prob=1)
@@ -265,25 +280,25 @@ def main():
 
                 # # half of positive input images are stitched positives
                 # if random.random() < 0.5:
-                #     img_comb_free = torch.cat([img_original, img_original], dim=2)
+                img_comb_free = torch.cat([img_original, img_original], dim=2)
 
-                #     if random.random() > 0.5:
-                #         # append img_original to the left
-                #         img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
-                #         watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
-                #         word_comb_mask = torch.cat([word_img, img_original], dim=2)
-                #     else:
-                #         # append img_original to the right
-                #         img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
-                #         watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
-                #         word_comb_mask = torch.cat([img_original, word_img], dim=2)
+                if random.random() > 0.5:
+                    # append img_original to the left
+                    img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
+                    watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
+                    word_comb_mask = torch.cat([word_img, img_original], dim=2)
+                else:
+                    # append img_original to the right
+                    img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
+                    watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
+                    word_comb_mask = torch.cat([img_original, word_img], dim=2)
                 
                 # # half of positive input images are hard positives, ie no stitching
-                # else: 
-                img_comb_free = img_original
-                img_comb_mask = watermarked_and_word_img
-                watermarked_comb_mask = watermarked_img
-                word_comb_mask = word_img
+                # # else: 
+                # img_comb_free = img_original
+                # img_comb_mask = watermarked_and_word_img
+                # watermarked_comb_mask = watermarked_img
+                # word_comb_mask = word_img
                 
                 # solve for binary masks
                 watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
