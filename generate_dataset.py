@@ -279,26 +279,26 @@ def main():
                 watermarked_and_word_img = blurrer(watermarked_and_word_img)
 
                 # # half of positive input images are stitched positives
-                # if random.random() < 0.5:
-                img_comb_free = torch.cat([img_original, img_original], dim=2)
+                if random.random() < 0.5:
+                    img_comb_free = torch.cat([img_original, img_original], dim=2)
 
-                if random.random() > 0.5:
-                    # append img_original to the left
-                    img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
-                    watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
-                    word_comb_mask = torch.cat([word_img, img_original], dim=2)
-                else:
-                    # append img_original to the right
-                    img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
-                    watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
-                    word_comb_mask = torch.cat([img_original, word_img], dim=2)
+                    if random.random() > 0.5:
+                        # append img_original to the left
+                        img_comb_mask = torch.cat([watermarked_and_word_img, img_original], dim=2)
+                        watermarked_comb_mask = torch.cat([watermarked_img, img_original], dim=2)
+                        word_comb_mask = torch.cat([word_img, img_original], dim=2)
+                    else:
+                        # append img_original to the right
+                        img_comb_mask = torch.cat([img_original, watermarked_and_word_img], dim=2)
+                        watermarked_comb_mask = torch.cat([img_original, watermarked_img], dim=2)
+                        word_comb_mask = torch.cat([img_original, word_img], dim=2)
                 
-                # # half of positive input images are hard positives, ie no stitching
-                # # else: 
-                # img_comb_free = img_original
-                # img_comb_mask = watermarked_and_word_img
-                # watermarked_comb_mask = watermarked_img
-                # word_comb_mask = word_img
+                # half of positive input images are hard positives, ie no stitching
+                else: 
+                    img_comb_free = img_original
+                    img_comb_mask = watermarked_and_word_img
+                    watermarked_comb_mask = watermarked_img
+                    word_comb_mask = word_img
                 
                 # solve for binary masks
                 watermarked_mask = solve_mask(watermarked_comb_mask, img_comb_free)
