@@ -238,19 +238,19 @@ def main():
             img = Image.open(indiv_photo_path)
             img = img.resize((256, 256))
 
-            # hard negative for all photos that are newly added
-            if (os.path.getmtime(indiv_photo_path) < datetime.date(2021,9,20).timestamp() or 
-                os.path.getmtime(indiv_photo_path) > datetime.date(2021,9,22).timestamp()):
-                img = np.array(img).astype(np.uint8)
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                img = ((torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                            .permute(2, 0, 1) / 255)
-                            .to(torch.float32))
-                img = blurrer(img)
-                save_id = f'{i}.jpg'
-                cv2.imwrite(osp.join(img_input_path, save_id),
-                            cv2.cvtColor(np.array(img.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
-                i += 1
+            # skip all newly added photos ._____.
+            if (os.path.getmtime(indiv_photo_path) < datetime.datetime(2021,9,20,0,0).timestamp() or 
+                os.path.getmtime(indiv_photo_path) > datetime.datetime(2021,9,22,0,0).timestamp()):
+                # img = np.array(img).astype(np.uint8)
+                # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                # img = ((torch.from_numpy(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                #             .permute(2, 0, 1) / 255)
+                #             .to(torch.float32))
+                # img = blurrer(img)
+                # save_id = f'{i}.jpg'
+                # cv2.imwrite(osp.join(img_input_path, save_id),
+                #             cv2.cvtColor(np.array(img.permute(1, 2, 0) * 255), cv2.COLOR_BGR2RGB))
+                # i += 1
                 continue
 
             # 5/7 of input images are hard negatives
